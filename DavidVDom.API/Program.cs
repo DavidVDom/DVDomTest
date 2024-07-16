@@ -7,7 +7,7 @@ builder.ConfigureSerilog();
 builder.Services.AddControllers();
 
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.ConfigureDbContext(builder.Configuration);
+builder.Services.ConfigureDbContext(builder);
 
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddSwaggerGen();
