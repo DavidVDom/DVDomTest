@@ -2,6 +2,7 @@
 using Azure.Security.KeyVault.Secrets;
 using DavidVDom.Domain.Abstractions;
 using DavidVDom.Infraestructure;
+using DavidVDom.Infraestructure.Seeds;
 using Microsoft.EntityFrameworkCore;
 
 namespace DavidVDom.API.Configuration
@@ -87,7 +88,7 @@ namespace DavidVDom.API.Configuration
                 try
                 {
                     logger.LogInformation("Seeding database...");
-                    //await InitialSeed.Seed(context, unitOfWork, logger);
+                    await InitialSeed.Seed(context, unitOfWork, logger);
                     logger.LogInformation("Seeding completed");
                 }
                 catch (Exception ex)

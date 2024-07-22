@@ -12,6 +12,8 @@ builder.Services.ConfigureDbContext(builder);
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddSwaggerGen();
 
+builder.Services.CustomServices();
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
@@ -26,5 +28,7 @@ app.UseHttpsRedirection();
 app.UseAuthorization();
 
 app.MapControllers();
+
+app.DatabaseInitialization();
 
 app.Run();
