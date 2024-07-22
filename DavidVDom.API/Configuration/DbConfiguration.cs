@@ -1,5 +1,6 @@
 ﻿using Azure.Identity;
 using Azure.Security.KeyVault.Secrets;
+using DavidVDom.Domain.Abstractions;
 using DavidVDom.Infraestructure;
 using Microsoft.EntityFrameworkCore;
 
@@ -7,6 +8,14 @@ namespace DavidVDom.API.Configuration
 {
     public static class DbConfiguration
     {
+        public static WebApplication DatabaseInitialization(this WebApplication app)
+        {
+            DatabaseExists(app);
+            ApplyMigrations(app);
+            SeedDatabase(app);
+
+            return app;
+        }
 
         public static IServiceCollection ConfigureDbContext(this IServiceCollection services, WebApplicationBuilder builder)
         {
@@ -35,6 +44,58 @@ namespace DavidVDom.API.Configuration
             }
 
             return connectionString;
+        }
+
+        public static void DatabaseExists(WebApplication app)
+        {
+            using var scope = app.Services.CreateScope();
+            var context = scope.ServiceProvider.GetRequiredService<DavidVDomDbContext>();
+            var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
+
+            if (!context.Database.CanConnect())
+            {
+                string errorMessage = "Database doesn't exists.";
+                logger.LogError(errorMessage);
+                throw new InvalidOperationException(errorMessage);
+            }
+        }
+
+        public static void ApplyMigrations(WebApplication app)
+        {
+            using var scope = app.Services.CreateScope();
+            var context = scope.ServiceProvider.GetRequiredService<DavidVDomDbContext>();
+            var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
+
+            if (context.Database.HasPendingModelChanges())
+            {
+                string errorMessage = "Database model has pending migrations";
+                logger.LogError(errorMessage);
+                throw new InvalidOperationException(errorMessage);
+            }
+        }
+
+        public async static void SeedDatabase(WebApplication app)
+        {
+            using var scope = app.Services.CreateScope();
+            var context = scope.ServiceProvider.GetRequiredService<DavidVDomDbContext>();
+            var unitOfWork = scope.ServiceProvider.GetRequiredService<IUnitOfWork>();
+            var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
+
+            if (context.Banks.OrderBy(x => x.Id).FirstOrDefault() == null)
+            {
+                logger.LogInformation("Empty bank table");
+                try
+                {
+                    logger.LogInformation("Seeding database...");
+                    //await InitialSeed.Seed(context, unitOfWork, logger);
+                    logger.LogInformation("Seeding completed");
+                }
+                catch (Exception ex)
+                {
+                    logger.LogError(ex.InnerException, "Error seeding database: ");
+                    throw;
+                }
+            }
         }
     }
 }
